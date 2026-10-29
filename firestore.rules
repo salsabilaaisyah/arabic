@@ -1,0 +1,92 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    // Default Deny
+    match /{document=**} {
+      allow read, write: if false;
+    }
+
+    function isSignedIn() {
+      return request.auth != null;
+    }
+
+    function isValidId(id) {
+      return id is string && id.size() <= 128 && id.matches('^[a-zA-Z0-9_\\-]+$');
+    }
+
+    function incoming() {
+      return request.resource.data;
+    }
+
+    function existing() {
+      return resource.data;
+    }
+
+    function isAdmin() {
+      return isSignedIn() && (
+        (request.auth.token.email != null && request.auth.token.email == "dinasalsa538@gmail.com") ||
+        exists(/databases/$(database)/documents/admins/$(request.auth.uid))
+      );
+    }
+
+    // User profiles
+    match /users/{userId} {
+      allow get: if isSignedIn() && (request.auth.uid == userId || isAdmin());
+      allow list: if isAdmin();
+      allow create: if isSignedIn() && request.auth.uid == userId && isValidId(userId);
+      allow update: if isSignedIn() && (request.auth.uid == userId || isAdmin());
+      allow delete: if isAdmin();
+    }
+
+    // Admins whitelist collection
+    match /admins/{adminId} {
+      allow read: if isSignedIn();
+      allow write: if isAdmin();
+    }
+
+    // Projects
+    match /projects/{projectId} {
+      allow get: if isSignedIn() && isValidId(projectId) && (resource.data.ownerId == request.auth.uid || isAdmin());
+      allow list: if isSignedIn() && (resource.data.ownerId == request.auth.uid || isAdmin());
+      allow create: if isSignedIn() && isValidId(projectId) && incoming().ownerId == request.auth.uid;
+      allow update: if isSignedIn() && isValidId(projectId) && (existing().ownerId == request.auth.uid || isAdmin()) && incoming().ownerId == existing().ownerId;
+      allow delete: if isSignedIn() && isValidId(projectId) && (existing().ownerId == request.auth.uid || isAdmin());
+
+      // Tasks subcollection
+      match /tasks/{taskId} {
+        allow get: if isSignedIn() && isValidId(taskId) && (
+          get(/databases/$(database)/documents/projects/$(projectId)).data.ownerId == request.auth.uid || isAdmin()
+        );
+        allow list: if isSignedIn() && (
+          get(/databases/$(database)/documents/projects/$(projectId)).data.ownerId == request.auth.uid || isAdmin()
+        );
+        allow create: if isSignedIn() && isValidId(taskId) && (
+          get(/databases/$(database)/documents/projects/$(projectId)).data.ownerId == request.auth.uid || isAdmin()
+        );
+        allow update: if isSignedIn() && isValidId(taskId) && (
+          get(/databases/$(database)/documents/projects/$(projectId)).data.ownerId == request.auth.uid || isAdmin()
+        );
+        allow delete: if isSignedIn() && isValidId(taskId) && (
+          get(/databases/$(database)/documents/projects/$(projectId)).data.ownerId == request.auth.uid || isAdmin()
+        );
+      }
+    }
+
+    // AI Sessions
+    match /ai_sessions/{sessionId} {
+      allow get: if isSignedIn() && isValidId(sessionId) && (resource.data.userId == request.auth.uid || isAdmin());
+      allow list: if isSignedIn() && (resource.data.userId == request.auth.uid || isAdmin());
+      allow create: if isSignedIn() && isValidId(sessionId) && incoming().userId == request.auth.uid;
+      allow update: if isSignedIn() && isValidId(sessionId) && (existing().userId == request.auth.uid || isAdmin());
+      allow delete: if isSignedIn() && isValidId(sessionId) && (existing().userId == request.auth.uid || isAdmin());
+    }
+
+    // Activity Logs
+    match /activity_logs/{logId} {
+      allow get: if isSignedIn() && isValidId(logId) && (resource.data.userId == request.auth.uid || isAdmin());
+      allow list: if isSignedIn() && (resource.data.userId == request.auth.uid || isAdmin());
+      allow create: if isSignedIn() && isValidId(logId) && incoming().userId == request.auth.uid;
+      allow delete: if isAdmin();
+    }
+  }
+}

@@ -1,0 +1,8 @@
+{
+  "name": "IdeaFlow AI - Smart Project & Workspace Hub",
+  "description": "Aplikasi manajemen ide proyek cerdas dan kolaborasi tim terintegrasi dengan Google AI Gemini, Firebase Auth, Firestore, dan panel Admin.",
+  "requestFramePermissions": [],
+  "majorCapabilities": [
+    "MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"
+  ]
+}
