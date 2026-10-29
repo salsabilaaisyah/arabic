@@ -1,12 +1,11 @@
 {
-  "projectId": "plucky-scheme-ml37k",
-  "appId": "1:279380047299:web:41ad7cef5d537282323976",
-  "apiKey": "AIzaSyCanPOdRwz_EP6AJPF5HO4sAioDfp_JZDo",
-  "authDomain": "plucky-scheme-ml37k.firebaseapp.com",
-  "firestoreDatabaseId": "ai-studio-3360dc31-d031-435c-8a9b-673745d149c5",
-  "storageBucket": "plucky-scheme-ml37k.firebasestorage.app",
-  "messagingSenderId": "279380047299",
+  "projectId": "arabic-75650",
+  "appId": "1:19938683358:web:058108f8808062418f954f",
+  "apiKey": "AIzaSyC2eKfivKgu5S_aunMPjz8olD4MTk-r8Lw",
+  "authDomain": "arabic-75650.firebaseapp.com",
+  "storageBucket": "arabic-75650.firebasestorage.app",
+  "messagingSenderId": "19938683358",
   "measurementId": "",
-  "oAuthClientId": "279380047299-rmugi7o4a3jmfj9qe43nfcvfhq2gc1u2.apps.googleusercontent.com",
+  "oAuthClientId": "",
   "recaptchaSiteKey": ""
 }

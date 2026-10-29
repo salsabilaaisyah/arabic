@@ -272,6 +272,86 @@ export const AdminPanel: React.FC = () => {
                 {backupSuccess && <CheckCircle2 className="w-4 h-4 text-emerald-400" />}
               </button>
 
+              <button
+                type="button"
+                onClick={() => {
+                  const rules = `rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    match /{document=**} {
+      allow read, write: if false;
+    }
+
+    function isSignedIn() {
+      return request.auth != null && request.auth.uid != null;
+    }
+
+    function isOwner(userId) {
+      return isSignedIn() && request.auth.uid == userId;
+    }
+
+    function isValidId(id) {
+      return id is string && id.size() <= 128 && id.matches('^[a-zA-Z0-9_\\\\-]+$');
+    }
+
+    match /users/{userId} {
+      allow get: if isOwner(userId);
+      allow list: if false;
+      allow create, update, delete: if isOwner(userId) && isValidId(userId);
+    }
+
+    match /projects/{projectId} {
+      allow get: if isSignedIn() && isValidId(projectId) && resource.data.ownerId == request.auth.uid;
+      allow list: if isSignedIn() && resource.data.ownerId == request.auth.uid;
+      allow create: if isSignedIn() && isValidId(projectId) && request.resource.data.ownerId == request.auth.uid;
+      allow update: if isSignedIn() && isValidId(projectId) 
+                    && resource.data.ownerId == request.auth.uid 
+                    && request.resource.data.ownerId == resource.data.ownerId;
+      allow delete: if isSignedIn() && isValidId(projectId) && resource.data.ownerId == request.auth.uid;
+
+      match /tasks/{taskId} {
+        allow get, list, update, delete: if isSignedIn() && isValidId(taskId) 
+                   && get(/databases/$(database)/documents/projects/$(projectId)).data.ownerId == request.auth.uid;
+        allow create: if isSignedIn() && isValidId(taskId) 
+                      && get(/databases/$(database)/documents/projects/$(projectId)).data.ownerId == request.auth.uid
+                      && request.resource.data.ownerId == request.auth.uid;
+      }
+    }
+
+    match /ai_sessions/{sessionId} {
+      allow get, list, update, delete: if isSignedIn() && isValidId(sessionId) && resource.data.userId == request.auth.uid;
+      allow create: if isSignedIn() && isValidId(sessionId) && request.resource.data.userId == request.auth.uid;
+    }
+
+    match /activity_logs/{logId} {
+      allow get, list, delete: if isSignedIn() && isValidId(logId) && resource.data.userId == request.auth.uid;
+      allow create: if isSignedIn() && isValidId(logId) && request.resource.data.userId == request.auth.uid;
+      allow update: if false;
+    }
+  }
+}`;
+                  navigator.clipboard.writeText(rules);
+                  alert('Firestore Security Rules berhasil disalin ke clipboard!');
+                }}
+                className="w-full py-2.5 px-3 rounded-xl bg-indigo-950/70 hover:bg-indigo-900/70 text-indigo-200 border border-indigo-800/60 text-xs font-semibold flex items-center justify-between transition-colors cursor-pointer"
+              >
+                <div className="flex items-center gap-2">
+                  <ShieldCheck className="w-4 h-4 text-indigo-400" />
+                  <span>Salin Firestore Security Rules</span>
+                </div>
+              </button>
+
+              <div className="p-3 rounded-xl bg-slate-950 border border-slate-800/80 text-[11px] text-slate-400 space-y-1">
+                <span className="text-slate-300 font-semibold block">Project Firebase Aktif:</span>
+                <p className="font-mono text-amber-300 font-bold">
+                  arabic-75650
+                </p>
+                <span className="text-slate-300 font-semibold block pt-1">Panduan Deploy Rules:</span>
+                <p>
+                  Salin rules di atas lalu tempel pada tab <strong className="text-slate-200">Firestore &gt; Rules</strong> di Firebase Console proyek <code className="text-indigo-300 font-mono">arabic-75650</code>.
+                </p>
+              </div>
+
               <div className="p-3 rounded-xl bg-slate-950 border border-slate-800/80 text-[11px] text-slate-400 space-y-1">
                 <span className="text-slate-300 font-semibold block">Panduan Deploy Vercel:</span>
                 <p>

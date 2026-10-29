@@ -1,92 +1,82 @@
 rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
-    // Default Deny
+    // 1. Default Deny Catch-All: Block any unspecified access
     match /{document=**} {
       allow read, write: if false;
     }
 
+    // Helper functions
     function isSignedIn() {
-      return request.auth != null;
+      return request.auth != null && request.auth.uid != null;
+    }
+
+    function isOwner(userId) {
+      return isSignedIn() && request.auth.uid == userId;
     }
 
     function isValidId(id) {
       return id is string && id.size() <= 128 && id.matches('^[a-zA-Z0-9_\\-]+$');
     }
 
-    function incoming() {
-      return request.resource.data;
-    }
-
-    function existing() {
-      return resource.data;
-    }
-
-    function isAdmin() {
-      return isSignedIn() && (
-        (request.auth.token.email != null && request.auth.token.email == "dinasalsa538@gmail.com") ||
-        exists(/databases/$(database)/documents/admins/$(request.auth.uid))
-      );
-    }
-
-    // User profiles
+    // 2. User Profiles (/users/{userId})
+    // Setiap user HANYA bisa membaca dan menulis data profilnya sendiri
     match /users/{userId} {
-      allow get: if isSignedIn() && (request.auth.uid == userId || isAdmin());
-      allow list: if isAdmin();
-      allow create: if isSignedIn() && request.auth.uid == userId && isValidId(userId);
-      allow update: if isSignedIn() && (request.auth.uid == userId || isAdmin());
-      allow delete: if isAdmin();
+      allow get: if isOwner(userId);
+      allow list: if false; // Mencegah user lain listing daftar seluruh user
+      allow create: if isOwner(userId) && isValidId(userId);
+      allow update: if isOwner(userId) && isValidId(userId);
+      allow delete: if isOwner(userId);
     }
 
-    // Admins whitelist collection
-    match /admins/{adminId} {
-      allow read: if isSignedIn();
-      allow write: if isAdmin();
-    }
-
-    // Projects
+    // 3. Proyek (/projects/{projectId})
+    // Setiap user HANYA bisa membaca, membuat, mengubah, dan menghapus proyek miliknya sendiri
     match /projects/{projectId} {
-      allow get: if isSignedIn() && isValidId(projectId) && (resource.data.ownerId == request.auth.uid || isAdmin());
-      allow list: if isSignedIn() && (resource.data.ownerId == request.auth.uid || isAdmin());
-      allow create: if isSignedIn() && isValidId(projectId) && incoming().ownerId == request.auth.uid;
-      allow update: if isSignedIn() && isValidId(projectId) && (existing().ownerId == request.auth.uid || isAdmin()) && incoming().ownerId == existing().ownerId;
-      allow delete: if isSignedIn() && isValidId(projectId) && (existing().ownerId == request.auth.uid || isAdmin());
+      allow get: if isSignedIn() && isValidId(projectId) && resource.data.ownerId == request.auth.uid;
+      allow list: if isSignedIn() && resource.data.ownerId == request.auth.uid;
+      allow create: if isSignedIn() && isValidId(projectId) && request.resource.data.ownerId == request.auth.uid;
+      allow update: if isSignedIn() && isValidId(projectId) 
+                    && resource.data.ownerId == request.auth.uid 
+                    && request.resource.data.ownerId == resource.data.ownerId;
+      allow delete: if isSignedIn() && isValidId(projectId) && resource.data.ownerId == request.auth.uid;
 
-      // Tasks subcollection
+      // 4. Subkoleksi Tugas (/projects/{projectId}/tasks/{taskId})
+      // Setiap user HANYA bisa mengakses & mengelola tugas di proyek yang dimilikinya
       match /tasks/{taskId} {
-        allow get: if isSignedIn() && isValidId(taskId) && (
-          get(/databases/$(database)/documents/projects/$(projectId)).data.ownerId == request.auth.uid || isAdmin()
-        );
-        allow list: if isSignedIn() && (
-          get(/databases/$(database)/documents/projects/$(projectId)).data.ownerId == request.auth.uid || isAdmin()
-        );
-        allow create: if isSignedIn() && isValidId(taskId) && (
-          get(/databases/$(database)/documents/projects/$(projectId)).data.ownerId == request.auth.uid || isAdmin()
-        );
-        allow update: if isSignedIn() && isValidId(taskId) && (
-          get(/databases/$(database)/documents/projects/$(projectId)).data.ownerId == request.auth.uid || isAdmin()
-        );
-        allow delete: if isSignedIn() && isValidId(taskId) && (
-          get(/databases/$(database)/documents/projects/$(projectId)).data.ownerId == request.auth.uid || isAdmin()
-        );
+        allow get: if isSignedIn() && isValidId(taskId) 
+                   && get(/databases/$(database)/documents/projects/$(projectId)).data.ownerId == request.auth.uid;
+        allow list: if isSignedIn() 
+                    && get(/databases/$(database)/documents/projects/$(projectId)).data.ownerId == request.auth.uid;
+        allow create: if isSignedIn() && isValidId(taskId) 
+                      && get(/databases/$(database)/documents/projects/$(projectId)).data.ownerId == request.auth.uid
+                      && request.resource.data.ownerId == request.auth.uid;
+        allow update: if isSignedIn() && isValidId(taskId) 
+                      && get(/databases/$(database)/documents/projects/$(projectId)).data.ownerId == request.auth.uid;
+        allow delete: if isSignedIn() && isValidId(taskId) 
+                      && get(/databases/$(database)/documents/projects/$(projectId)).data.ownerId == request.auth.uid;
       }
     }
 
-    // AI Sessions
+    // 5. Sesi AI (/ai_sessions/{sessionId})
+    // Setiap user HANYA bisa membaca dan menyimpan riwayat prompt/respons AI miliknya sendiri
     match /ai_sessions/{sessionId} {
-      allow get: if isSignedIn() && isValidId(sessionId) && (resource.data.userId == request.auth.uid || isAdmin());
-      allow list: if isSignedIn() && (resource.data.userId == request.auth.uid || isAdmin());
-      allow create: if isSignedIn() && isValidId(sessionId) && incoming().userId == request.auth.uid;
-      allow update: if isSignedIn() && isValidId(sessionId) && (existing().userId == request.auth.uid || isAdmin());
-      allow delete: if isSignedIn() && isValidId(sessionId) && (existing().userId == request.auth.uid || isAdmin());
+      allow get: if isSignedIn() && isValidId(sessionId) && resource.data.userId == request.auth.uid;
+      allow list: if isSignedIn() && resource.data.userId == request.auth.uid;
+      allow create: if isSignedIn() && isValidId(sessionId) && request.resource.data.userId == request.auth.uid;
+      allow update: if isSignedIn() && isValidId(sessionId) 
+                    && resource.data.userId == request.auth.uid 
+                    && request.resource.data.userId == resource.data.userId;
+      allow delete: if isSignedIn() && isValidId(sessionId) && resource.data.userId == request.auth.uid;
     }
 
-    // Activity Logs
+    // 6. Log Aktivitas (/activity_logs/{logId})
+    // Setiap user HANYA bisa membaca dan mencatat log aktivitas miliknya sendiri
     match /activity_logs/{logId} {
-      allow get: if isSignedIn() && isValidId(logId) && (resource.data.userId == request.auth.uid || isAdmin());
-      allow list: if isSignedIn() && (resource.data.userId == request.auth.uid || isAdmin());
-      allow create: if isSignedIn() && isValidId(logId) && incoming().userId == request.auth.uid;
-      allow delete: if isAdmin();
+      allow get: if isSignedIn() && isValidId(logId) && resource.data.userId == request.auth.uid;
+      allow list: if isSignedIn() && resource.data.userId == request.auth.uid;
+      allow create: if isSignedIn() && isValidId(logId) && request.resource.data.userId == request.auth.uid;
+      allow update: if false; // Log aktivitas bersifat append-only / immutable
+      allow delete: if isSignedIn() && isValidId(logId) && resource.data.userId == request.auth.uid;
     }
   }
 }
