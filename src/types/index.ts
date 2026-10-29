@@ -9,48 +9,48 @@ export interface AppUser {
   isCustomAdmin?: boolean;
 }
 
-export type Priority = 'low' | 'medium' | 'high';
-export type ProjectStatus = 'planning' | 'active' | 'completed' | 'archived';
-export type TaskStatus = 'todo' | 'in_progress' | 'review' | 'done';
+export type FamilyCategory = 'inti' | 'kakek_nenek' | 'kerabat' | 'pernikahan';
 
-export interface Project {
+export interface VocabularyItem {
   id: string;
-  title: string;
-  description: string;
-  category: string;
-  priority: Priority;
-  status: ProjectStatus;
-  ownerId: string;
-  ownerEmail: string;
-  createdAt: string;
-  updatedAt: string;
-  tasksCount?: number;
-  completedTasksCount?: number;
-  keyFeatures?: string[];
-  techStack?: string[];
+  arabic: string;
+  transliteration: string;
+  indonesian: string;
+  category: FamilyCategory;
+  gender: 'mudzakkar' | 'muannats';
+  exampleArabic: string;
+  exampleTranslation: string;
+  note?: string;
+  icon?: string;
 }
 
-export interface Task {
-  id: string;
-  projectId: string;
-  title: string;
-  description: string;
-  status: TaskStatus;
-  priority: Priority;
-  assignedTo?: string;
-  ownerId: string;
-  createdAt: string;
-  updatedAt: string;
+export interface QuizQuestion {
+  id: number;
+  question: string;
+  options: string[];
+  correctAnswer: number;
+  explanation: string;
 }
 
-export interface AiSession {
-  id: string;
+export interface UserProgress {
   userId: string;
-  projectId?: string;
-  prompt: string;
-  result: string;
-  model: string;
-  createdAt: string;
+  completedVocabIds: string[];
+  quizScores: {
+    date: string;
+    score: number;
+    total: number;
+  }[];
+  totalQuizzesTaken: number;
+  highestScore: number;
+  lastActive: string;
+}
+
+export interface SentenceAnalysis {
+  isCorrect: boolean;
+  original: string;
+  corrected: string;
+  translation: string;
+  feedback: string;
 }
 
 export interface ActivityLog {
@@ -60,20 +60,4 @@ export interface ActivityLog {
   action: string;
   details: string;
   createdAt: string;
-}
-
-export interface GeneratedIdea {
-  title: string;
-  overview: string;
-  category: string;
-  targetAudience: string;
-  keyFeatures: string[];
-  techStack: string[];
-  milestones: {
-    title: string;
-    priority: Priority;
-    status: TaskStatus;
-  }[];
-  potentialChallenges: string[];
-  marketValue: string;
 }

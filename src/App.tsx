@@ -6,70 +6,99 @@
 import React, { useState, useEffect } from 'react';
 import { AuthProvider, useAuth } from './context/AuthContext';
 import { LoginView } from './components/LoginView';
-import { Navbar } from './components/Navbar';
-import { ProjectList } from './components/ProjectList';
-import { ProjectDetail } from './components/ProjectDetail';
-import { GeminiIdeaStudio } from './components/GeminiIdeaStudio';
+import { Navbar, MainNavTab } from './components/Navbar';
+import { VocabularySection } from './components/VocabularySection';
+import { FamilyTreeVisualizer } from './components/FamilyTreeVisualizer';
+import { QuizSection } from './components/QuizSection';
+import { ArabicTutorChat } from './components/ArabicTutorChat';
 import { AdminPanel } from './components/AdminPanel';
-import { NewProjectModal } from './components/NewProjectModal';
-import { getProjects, deleteProject } from './firebase/firestoreService';
-import { Project } from './types';
-import { Sparkles } from 'lucide-react';
+import { getUserProgress, saveUserProgress, logActivity } from './firebase/firestoreService';
+import { UserProgress } from './types';
+import { Sparkles, BookOpen } from 'lucide-react';
 
-function MainApp() {
+function MainLearningApp() {
   const { user, loading: authLoading } = useAuth();
-  const [currentTab, setCurrentTab] = useState<'projects' | 'ai-studio' | 'admin'>('projects');
-  const [selectedProjectId, setSelectedProjectId] = useState<string | null>(null);
-  const [projects, setProjects] = useState<Project[]>([]);
-  const [loadingProjects, setLoadingProjects] = useState(true);
-  const [isNewModalOpen, setIsNewModalOpen] = useState(false);
+  const [currentTab, setCurrentTab] = useState<MainNavTab>('vocab');
+  const [userProgress, setUserProgress] = useState<UserProgress | null>(null);
 
-  // Load projects whenever user is present
+  // Load progress when user signs in
   useEffect(() => {
     if (user) {
-      loadProjects();
+      loadProgress();
     }
   }, [user]);
 
-  const loadProjects = async () => {
+  const loadProgress = async () => {
     if (!user) return;
-    setLoadingProjects(true);
     try {
-      const data = await getProjects(user);
-      setProjects(data);
+      const p = await getUserProgress(user.uid);
+      setUserProgress(p);
     } catch (e) {
-      console.error('Failed to load projects:', e);
-    } finally {
-      setLoadingProjects(false);
+      console.warn('Progress load warning:', e);
     }
   };
 
-  const handleProjectCreated = (newId: string) => {
-    setIsNewModalOpen(false);
-    loadProjects();
-    setSelectedProjectId(newId);
-    setCurrentTab('projects');
+  const handleToggleMastered = async (vocabId: string) => {
+    if (!user || !userProgress) return;
+    const current = userProgress.completedVocabIds || [];
+    const isAlready = current.includes(vocabId);
+    const updatedList = isAlready
+      ? current.filter((id) => id !== vocabId)
+      : [...current, vocabId];
+
+    const updated = {
+      ...userProgress,
+      completedVocabIds: updatedList,
+    };
+    setUserProgress(updated);
+    await saveUserProgress(user.uid, { completedVocabIds: updatedList });
+    await logActivity(
+      user.uid,
+      user.email || 'siswa@al-usrah.local',
+      isAlready ? 'Batal Hafal' : 'Hafal Kosakata',
+      `Kosakata: ${vocabId}`
+    );
   };
 
-  const handleDeleteProject = async (id: string) => {
-    if (window.confirm('Apakah Anda yakin ingin menghapus proyek ini?')) {
-      await deleteProject(id);
-      if (selectedProjectId === id) {
-        setSelectedProjectId(null);
-      }
-      await loadProjects();
-    }
+  const handleQuizCompleted = async (score: number, total: number) => {
+    if (!user || !userProgress) return;
+    const currentScores = userProgress.quizScores || [];
+    const newRecord = { date: new Date().toISOString(), score, total };
+    const updatedList = [newRecord, ...currentScores.slice(0, 9)];
+    const percent = Math.round((score / total) * 100);
+    const highest = Math.max(userProgress.highestScore || 0, percent);
+
+    const updated = {
+      ...userProgress,
+      quizScores: updatedList,
+      totalQuizzesTaken: (userProgress.totalQuizzesTaken || 0) + 1,
+      highestScore: highest,
+    };
+    setUserProgress(updated);
+    await saveUserProgress(user.uid, {
+      quizScores: updatedList,
+      totalQuizzesTaken: updated.totalQuizzesTaken,
+      highestScore: highest,
+    });
+    await logActivity(
+      user.uid,
+      user.email || 'siswa@al-usrah.local',
+      'Menyelesaikan Kuis',
+      `Skor: ${score}/${total} (${percent}%)`
+    );
   };
 
   // 1. Loading state during auth check
   if (authLoading) {
     return (
       <div className="min-h-screen bg-slate-950 flex flex-col items-center justify-center p-4">
-        <div className="w-12 h-12 rounded-2xl bg-indigo-600/20 border border-indigo-500/30 flex items-center justify-center text-indigo-400 mb-4 animate-bounce">
-          <Sparkles className="w-6 h-6" />
+        <div className="w-14 h-14 rounded-3xl bg-emerald-600/20 border border-emerald-500/30 flex items-center justify-center text-emerald-400 mb-4 animate-bounce">
+          <span className="font-arabic text-2xl font-bold">بِسْمِ اللهِ</span>
         </div>
-        <p className="text-sm font-semibold text-slate-300">Memuat Sesi IdeaFlow AI...</p>
-        <span className="text-xs text-slate-500 mt-1">Menghubungkan ke Firebase Auth & Firestore</span>
+        <p className="font-arabic text-lg text-emerald-400 font-bold mb-1">
+          بِسْمِ اللَّهِ الرَّحْمَٰنِ الرَّحِيمِ
+        </p>
+        <p className="text-xs text-slate-400">Menghubungkan ke Platform Belajar Al-Usrah...</p>
       </div>
     );
   }
@@ -79,53 +108,29 @@ function MainApp() {
     return <LoginView />;
   }
 
-  const selectedProject = projects.find((p) => p.id === selectedProjectId);
-
-  // 3. Authenticated Workspace
+  // 3. Authenticated Learning Platform
   return (
-    <div className="min-h-screen bg-slate-950 text-slate-100 flex flex-col">
-      <Navbar currentTab={currentTab} setCurrentTab={(tab) => {
-        setSelectedProjectId(null);
-        setCurrentTab(tab);
-      }} />
+    <div className="min-h-screen bg-slate-950 text-slate-100 flex flex-col font-sans">
+      <Navbar currentTab={currentTab} setCurrentTab={setCurrentTab} />
 
       <main className="flex-1 pb-16">
-        {selectedProject ? (
-          <ProjectDetail
-            project={selectedProject}
-            onBack={() => setSelectedProjectId(null)}
-            onProjectUpdated={loadProjects}
+        {currentTab === 'vocab' && (
+          <VocabularySection
+            masteredIds={userProgress?.completedVocabIds || []}
+            onToggleMastered={handleToggleMastered}
           />
-        ) : (
-          <>
-            {currentTab === 'projects' && (
-              <ProjectList
-                projects={projects}
-                loading={loadingProjects}
-                onSelectProject={(id) => setSelectedProjectId(id)}
-                onOpenNewModal={() => setIsNewModalOpen(true)}
-                onDeleteProject={handleDeleteProject}
-                onOpenAiStudio={() => setCurrentTab('ai-studio')}
-              />
-            )}
-
-            {currentTab === 'ai-studio' && (
-              <GeminiIdeaStudio
-                onProjectCreated={handleProjectCreated}
-              />
-            )}
-
-            {currentTab === 'admin' && <AdminPanel />}
-          </>
         )}
-      </main>
 
-      {/* New Project Modal */}
-      <NewProjectModal
-        isOpen={isNewModalOpen}
-        onClose={() => setIsNewModalOpen(false)}
-        onCreated={handleProjectCreated}
-      />
+        {currentTab === 'tree' && <FamilyTreeVisualizer />}
+
+        {currentTab === 'quiz' && (
+          <QuizSection onQuizCompleted={handleQuizCompleted} />
+        )}
+
+        {currentTab === 'tutor' && <ArabicTutorChat />}
+
+        {currentTab === 'admin' && <AdminPanel />}
+      </main>
     </div>
   );
 }
@@ -133,7 +138,7 @@ function MainApp() {
 export default function App() {
   return (
     <AuthProvider>
-      <MainApp />
+      <MainLearningApp />
     </AuthProvider>
   );
 }

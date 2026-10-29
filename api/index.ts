@@ -27,14 +27,14 @@ const getGeminiClient = () => {
 app.get('/api/health', (_req: Request, res: Response) => {
   res.json({
     status: 'ok',
+    app: 'Al-Usrah Arabic Learning Platform',
     timestamp: new Date().toISOString(),
     geminiConfigured: Boolean(process.env.GEMINI_API_KEY),
     uptime: process.uptime(),
-    environment: process.env.NODE_ENV || 'development',
   });
 });
 
-// Admin Authentication endpoint
+// Admin Authentication endpoint (Mandatory: password '21@prill2005')
 app.post('/api/auth/admin-login', (req: Request, res: Response): void => {
   const { username, password } = req.body || {};
   const ADMIN_PASSWORD = '21@prill2005';
@@ -42,7 +42,7 @@ app.post('/api/auth/admin-login', (req: Request, res: Response): void => {
   if (!password || password !== ADMIN_PASSWORD) {
     res.status(401).json({
       success: false,
-      message: 'Password admin tidak valid! Silakan periksa kembali password.',
+      message: 'Password admin tidak valid! Silakan masukkan password yang benar.',
     });
     return;
   }
@@ -55,8 +55,8 @@ app.post('/api/auth/admin-login', (req: Request, res: Response): void => {
     user: {
       uid: 'admin_sys_' + Buffer.from(cleanUsername).toString('hex').slice(0, 10),
       username: cleanUsername,
-      displayName: `Admin (${cleanUsername})`,
-      email: cleanUsername.includes('@') ? cleanUsername : `${cleanUsername}@ideaflow.app`,
+      displayName: `Ustadz Admin (${cleanUsername})`,
+      email: cleanUsername.includes('@') ? cleanUsername : `${cleanUsername}@al-usrah.app`,
       role: 'admin',
       isCustomAdmin: true,
       lastLogin: new Date().toISOString(),
@@ -65,139 +65,128 @@ app.post('/api/auth/admin-login', (req: Request, res: Response): void => {
   });
 });
 
-// AI Idea Generator
-app.post('/api/ai/generate-ideas', async (req: Request, res: Response): Promise<void> => {
+// AI Arabic Tutor Chat (Ustadz AI - Tema Keluarga / الأُسْرَة)
+app.post('/api/ai/arabic-tutor', async (req: Request, res: Response): Promise<void> => {
   try {
-    const { topic, category, targetAudience, goals } = req.body || {};
-    if (!topic) {
-      res.status(400).json({ error: 'Topik atau ide awal harus diisi.' });
+    const { userMessage, history } = req.body || {};
+    if (!userMessage) {
+      res.status(400).json({ error: 'Pesan pertanyaan tidak boleh kosong.' });
       return;
     }
 
     const ai = getGeminiClient();
     if (!ai) {
-      // Fallback mock structure if GEMINI_API_KEY is not yet populated
       res.json({
-        title: `${topic} - Inovasi Digital`,
-        overview: `Platform cerdas yang dirancang untuk ${topic} dengan integrasi alur kerja modern dan analitik cerdas.`,
-        category: category || 'Produktivitas & SaaS',
-        targetAudience: targetAudience || 'Pengembang, Bisnis, & Tim Kolaboratif',
-        keyFeatures: [
-          'Dashboard Manajemen Realtime & Visualisasi Proyek',
-          'Automasi Analisis Data & Ekstraksi Ide Gemini AI',
-          'Kanban Board Kolaboratif dengan Delegasi Tugas',
-          'Laporan Perkembangan Otomatis & Notifikasi Cerdas'
-        ],
-        techStack: ['React', 'TypeScript', 'Tailwind CSS', 'Firebase Firestore', 'Express Backend', 'Google Gemini AI'],
-        milestones: [
-          { title: 'Riset Pasar & Spesifikasi Kebutuhan', priority: 'high', status: 'done' },
-          { title: 'Arsitektur Database & Skema Firestore', priority: 'high', status: 'in_progress' },
-          { title: 'Integrasi AI Gemini & Prompt Pipeline', priority: 'medium', status: 'todo' },
-          { title: 'Testing Alpha & Deployment Vercel', priority: 'medium', status: 'todo' }
-        ],
-        potentialChallenges: [
-          'Optimalisasi latensi respon AI',
-          'Skalabilitas sinkronisasi Firestore realtime',
-          'Adopsi antarmuka pengguna yang intuitif'
-        ],
-        marketValue: 'Tinggi, memiliki diferensiasi kuat berkat integrasi AI dan sinkronisasi realtime.'
+        reply: `[Mode Offline / Menunggu API Key] Terkait pertanyaan "${userMessage}": Dalam materi keluarga (الأُسْرَة), kita mengenal أَبٌ (Ayah), أُمٌّ (Ibu), أَخٌ (Saudara laki-laki), dan أُخْتٌ (Saudara perempuan). Untuk kata tunjuk, gunakan هَذَا untuk mudzakkar (هَذَا أَبِي - Ini ayahku) dan هَذِهِ untuk muannats (هَذِهِ أُمِّي - Ini ibuku).`,
       });
       return;
     }
 
-    const prompt = `
-Anda adalah seorang konsultan produk dan arsitek sistem terkemuka.
-Hasilkan blueprint ide aplikasi yang komprehensif, terstruktur, dan actionable berdasarkan input berikut:
-- Topik / Ide Utama: "${topic}"
-- Kategori: "${category || 'Teknologi & Produktivitas'}"
-- Target Audiens: "${targetAudience || 'Profesional & Bisnis'}"
-- Tujuan / Goals: "${goals || 'Meningkatkan efisiensi dan kolaborasi'}"
-
-Format respon WAJIB berupa JSON murni tanpa markdown triple-backtick, dengan struktur:
-{
-  "title": "Nama proyek yang menarik dan profesional",
-  "overview": "Deskripsi singkat dan mendalam (2-3 kalimat)",
-  "category": "Kategori spesifik",
-  "targetAudience": "Target pengguna yang relevan",
-  "keyFeatures": ["Fitur 1", "Fitur 2", "Fitur 3", "Fitur 4", "Fitur 5"],
-  "techStack": ["Teknologi 1", "Teknologi 2", "Teknologi 3", "Teknologi 4"],
-  "milestones": [
-    { "title": "Milestone 1", "priority": "high", "status": "todo" },
-    { "title": "Milestone 2", "priority": "medium", "status": "todo" },
-    { "title": "Milestone 3", "priority": "high", "status": "todo" },
-    { "title": "Milestone 4", "priority": "medium", "status": "todo" }
-  ],
-  "potentialChallenges": ["Tantangan 1", "Tantangan 2", "Tantangan 3"],
-  "marketValue": "Analisis potensi pasar dan nilai jual unik"
-}
+    const systemInstruction = `
+Anda adalah "Ustadz AI", tutor pembelajaran Bahasa Arab yang ramah, berwawasan luas, sabar, dan ahli dalam pedagogi bahasa Arab untuk penutur Indonesia.
+Fokus Pembelajaran Utama saat ini: TEMA KELUARGA (مَوْضُوعُ الأُسْرَةِ وَالعَائِلَةِ).
+Pedoman Jawaban:
+1. Selalu sertakan teks Arab berharakat lengkap (fathah, kasrah, dhammah, sukun, tasydid) untuk memudahkan pemula.
+2. Berikan transliterasi latin dan arti dalam bahasa Indonesia yang jelas.
+3. Jelaskan kaidah tata bahasa secara sederhana (misal: dhomir kepemilikan 'Ya Mutakallim' seperti أَبِي / أُمِّي, atau isim isyarah هَذَا / هَذِهِ).
+4. Berikan contoh kalimat aplikatif percakapan sehari-hari tentang keluarga.
+5. Dorong siswa untuk mencoba membuat kalimat pendek atau melafalkannya.
 `;
+
+    const contents = [
+      ...(Array.isArray(history)
+        ? history.map((h: { role: string; content: string }) => ({
+            role: h.role === 'user' ? 'user' : 'model',
+            parts: [{ text: h.content }],
+          }))
+        : []),
+      {
+        role: 'user',
+        parts: [{ text: userMessage }],
+      },
+    ];
 
     const response = await ai.models.generateContent({
       model: 'gemini-3.8-flash',
-      contents: prompt,
+      contents,
       config: {
-        responseMimeType: 'application/json',
+        systemInstruction,
+        temperature: 0.6,
       },
     });
 
-    const rawText = response.text || '{}';
-    let parsedData;
-    try {
-      parsedData = JSON.parse(rawText);
-    } catch {
-      const match = rawText.match(/\{[\s\S]*\}/);
-      if (match) {
-        parsedData = JSON.parse(match[0]);
-      } else {
-        throw new Error('Gagal memparsing JSON dari Gemini.');
-      }
-    }
-
-    res.json(parsedData);
+    res.json({
+      reply: response.text || 'عَفْوًا، لَمْ أَفْهَمْ جَيِّدًا (Maaf, respon tidak dapat dihasilkan).',
+    });
   } catch (error) {
-    console.error('Error generating idea:', error);
+    console.error('Error in arabic tutor:', error);
     res.status(500).json({
-      error: error instanceof Error ? error.message : 'Gagal menghasilkan ide dengan AI.',
+      error: error instanceof Error ? error.message : 'Gagal menghubungi tutor AI.',
     });
   }
 });
 
-// AI Kanban Action Plan Generator
-app.post('/api/ai/action-plan', async (req: Request, res: Response): Promise<void> => {
+// Dynamic AI Arabic Quiz Generator (Tema Keluarga)
+app.post('/api/ai/arabic-quiz', async (req: Request, res: Response): Promise<void> => {
   try {
-    const { projectTitle, description } = req.body || {};
-    if (!projectTitle) {
-      res.status(400).json({ error: 'Judul proyek diperlukan.' });
-      return;
-    }
-
+    const { level = 'pemula', count = 5 } = req.body || {};
     const ai = getGeminiClient();
+
     if (!ai) {
+      // Default fallback quiz items
       res.json({
-        tasks: [
-          { title: 'Setup Repository & Environment Variables', description: 'Konfigurasi .env dan inisialisasi modul', status: 'done', priority: 'high' },
-          { title: 'Desain Antarmuka Utama & Komponen UI', description: 'Implementasi tema Tailwind CSS dan layout responsif', status: 'in_progress', priority: 'high' },
-          { title: 'Konfigurasi Firestore Rules & Indexes', description: 'Amankan koleksi dan buat aturan akses ketat', status: 'todo', priority: 'medium' },
-          { title: 'Integrasi Otomasi AI dengan Gemini API', description: 'Hubungkan endpoint server-side untuk ideation', status: 'todo', priority: 'high' },
-          { title: 'Uji Coba & Deploy ke Vercel', description: 'Pastikan build lolos dan vercel.json rewrite berjalan lancar', status: 'todo', priority: 'medium' }
-        ]
+        questions: [
+          {
+            id: 1,
+            question: "Apa arti dari kata 'أَبٌ' (Abun)?",
+            options: ['Ayah', 'Ibu', 'Paman', 'Kakek'],
+            correctAnswer: 0,
+            explanation: 'أَبٌ (Abun) artinya Ayah. Bentuk kepemilikannya: أَبِي (Ayahku).',
+          },
+          {
+            id: 2,
+            question: 'Manakah kata yang tepat untuk melengkapi: "هَذِهِ ... (Ini ibuku)"?',
+            options: ['أَبِي', 'أُمِّي', 'أَخِي', 'عَمِّي'],
+            correctAnswer: 1,
+            explanation: 'Kata tunjuk "هَذِهِ" digunakan untuk muannats (perempuan), sehingga pasangan yang tepat adalah أُمِّي (Ibuku).',
+          },
+          {
+            id: 3,
+            question: "Apakah arti dari kata 'جَدٌّ' dan 'جَدَّةٌ'?",
+            options: ['Paman dan Bibi', 'Suami dan Istri', 'Kakek dan Nenek', 'Anak Laki-laki dan Perempuan'],
+            correctAnswer: 2,
+            explanation: 'جَدٌّ (Jaddun) adalah Kakek, dan جَدَّةٌ (Jaddatun) adalah Nenek.',
+          },
+          {
+            id: 4,
+            question: "Bahasa Arab dari 'Saudara Perempuan' adalah...",
+            options: ['أَخٌ', 'أُخْتٌ', 'بِنْتٌ', 'خَالَةٌ'],
+            correctAnswer: 1,
+            explanation: 'أُخْتٌ (Ukhtun) artinya Saudara Perempuan.',
+          },
+          {
+            id: 5,
+            question: 'Kalimat "هَذَا أَخِي الصَّغِيرُ" artinya adalah...',
+            options: ['Ini kakak laki-lakiku', 'Ini adik laki-lakiku', 'Ini anak perempuanku', 'Ini pamanku'],
+            correctAnswer: 1,
+            explanation: 'أَخِي (Saudaraku) + الصَّغِيرُ (yang kecil / adik) = Ini adik laki-lakiku.',
+          },
+        ],
       });
       return;
     }
 
     const prompt = `
-Buat daftar 5-7 tugas kanban (action plan) yang konkret untuk proyek berikut:
-Judul Proyek: "${projectTitle}"
-Deskripsi: "${description || 'Proyek manajemen ide cerdas'}"
-
-Berikan output berupa JSON murni dengan format:
+Buatlah ${count} soal kuis pilihan ganda interaktif untuk Pembelajaran Bahasa Arab dengan tema KELUARGA (الأُسْرَة) tingkat ${level}.
+Format output WAJIB JSON murni tanpa markdown, dengan struktur:
 {
-  "tasks": [
+  "questions": [
     {
-      "title": "Judul tugas singkat (max 60 karakter)",
-      "description": "Langkah detail atau kriteria selesai (1-2 kalimat)",
-      "status": "todo" | "in_progress" | "review" | "done",
-      "priority": "low" | "medium" | "high"
+      "id": 1,
+      "question": "Pertanyaan dalam bahasa Indonesia atau teks Arab berharakat",
+      "options": ["Opsi A", "Opsi B", "Opsi C", "Opsi D"],
+      "correctAnswer": 0, // index 0-3 dari jawaban yang benar
+      "explanation": "Penjelasan singkat kosakata & kaidah tata bahasanya"
     }
   ]
 }
@@ -211,78 +200,77 @@ Berikan output berupa JSON murni dengan format:
       },
     });
 
-    const rawText = response.text || '{"tasks":[]}';
-    const parsed = JSON.parse(rawText);
-    res.json(parsed);
+    const raw = response.text || '{"questions":[]}';
+    let data;
+    try {
+      data = JSON.parse(raw);
+    } catch {
+      const match = raw.match(/\{[\s\S]*\}/);
+      data = match ? JSON.parse(match[0]) : { questions: [] };
+    }
+    res.json(data);
   } catch (error) {
-    console.error('Error action-plan:', error);
-    res.status(500).json({
-      error: error instanceof Error ? error.message : 'Gagal membuat action plan.',
-    });
+    console.error('Quiz generator error:', error);
+    res.status(500).json({ error: 'Gagal membuat kuis.' });
   }
 });
 
-// AI Interactive Brainstorming Assistant
-app.post('/api/ai/brainstorm', async (req: Request, res: Response): Promise<void> => {
+// AI Sentence Checker (Tashih Kalimat Bahasa Arab Keluarga)
+app.post('/api/ai/analyze-sentence', async (req: Request, res: Response): Promise<void> => {
   try {
-    const { projectTitle, projectDescription, userMessage, history } = req.body || {};
-    if (!userMessage) {
-      res.status(400).json({ error: 'Pesan pengguna tidak boleh kosong.' });
+    const { sentence } = req.body || {};
+    if (!sentence) {
+      res.status(400).json({ error: 'Kalimat harus diisi.' });
       return;
     }
 
     const ai = getGeminiClient();
     if (!ai) {
       res.json({
-        reply: `[Mode Standar / Gemini API Key belum diset] Terkait pertanyaan "${userMessage}": Anda dapat fokus pada penyempurnaan alur kerja pengguna, validasi kebutuhan pasar tercepat (MVP), serta pemanfaatan Firebase Firestore untuk sinkronisasi seketika.`
+        isCorrect: true,
+        corrected: sentence,
+        translation: 'Kalimat Anda telah dicatat.',
+        feedback: 'Bagus! Terus berlatih menggunakan kosakata keluarga dalam kalimat.',
       });
       return;
     }
 
-    const systemInstruction = `
-Anda adalah asisten konsultan strategi produk "IdeaFlow AI".
-Anda ramah, solutif, analitis, dan berpengalaman dalam pengembangan perangkat lunak modern.
-Konteks Proyek Saat Ini:
-- Judul Proyek: ${projectTitle || 'Workspace Kolaborasi'}
-- Gambaran: ${projectDescription || 'Aplikasi web interaktif'}
-Berikan jawaban yang jelas, bernas, gunakan poin-poin bila membantu, dan selalu sarankan langkah konkret berikutnya.
+    const prompt = `
+Periksa kalimat bahasa Arab berikut yang dibuat oleh siswa tentang tema keluarga: "${sentence}".
+Berikan koreksi tata bahasa (Nahwu/Shorof), perbaikan harakat jika keliru, terjemahan Indonesia, dan saran perbaikan ramah.
+Format respon JSON murni:
+{
+  "isCorrect": true | false,
+  "original": "${sentence}",
+  "corrected": "Kalimat yang telah dibenarkan harakat dan susunannya",
+  "translation": "Terjemahan bahasa Indonesia yang tepat",
+  "feedback": "Penjelasan tata bahasa yang mendidik dan memotivasi"
+}
 `;
-
-    const contents = [
-      ...(Array.isArray(history) ? history.map((h: { role: string; content: string }) => ({
-        role: h.role === 'user' ? 'user' : 'model',
-        parts: [{ text: h.content }]
-      })) : []),
-      {
-        role: 'user',
-        parts: [{ text: userMessage }]
-      }
-    ];
 
     const response = await ai.models.generateContent({
       model: 'gemini-3.8-flash',
-      contents,
+      contents: prompt,
       config: {
-        systemInstruction,
-        temperature: 0.7,
+        responseMimeType: 'application/json',
       },
     });
 
-    res.json({
-      reply: response.text || 'Tidak ada respon dari model.',
-    });
+    const raw = response.text || '{}';
+    const parsed = JSON.parse(raw);
+    res.json(parsed);
   } catch (error) {
-    console.error('Error in brainstorming:', error);
-    res.status(500).json({
-      error: error instanceof Error ? error.message : 'Gagal memproses brainstorming AI.',
-    });
+    console.error('Error analyzing sentence:', error);
+    res.status(500).json({ error: 'Gagal menganalisis kalimat.' });
   }
 });
 
-// Admin System Metrics & Logs
+// Admin System Metrics
 app.get('/api/admin/metrics', (_req: Request, res: Response) => {
   const memory = process.memoryUsage();
   res.json({
+    app: 'Al-Usrah Arabic Learning Platform',
+    theme: 'Materi Keluarga (الأُسْرَةِ وَالعَائِلَةِ)',
     nodeVersion: process.version,
     uptimeSeconds: Math.floor(process.uptime()),
     memoryUsageMB: {
@@ -291,15 +279,14 @@ app.get('/api/admin/metrics', (_req: Request, res: Response) => {
       heapUsed: Math.round(memory.heapUsed / (1024 * 1024)),
     },
     services: {
-      firebaseAuth: 'Aktif',
-      firestore: 'Aktif',
-      geminiSdk: process.env.GEMINI_API_KEY ? 'Siap (gemini-3.8-flash)' : 'Menunggu Key',
-      vercelRewrite: 'Terkonfigurasi (/api/*)',
+      firebaseProject: 'arabic-75650',
+      firebaseAuth: 'Aktif (Google Sign-In + Admin)',
+      firestore: 'Aktif (Per-User Security Rules)',
+      geminiTutor: process.env.GEMINI_API_KEY ? 'Siap (gemini-3.8-flash)' : 'Menunggu Key',
     },
     adminAccountConfigured: true,
     serverTime: new Date().toISOString(),
   });
 });
 
-// CRITICAL: Export default app without app.listen (sesuai instruksi)
 export default app;

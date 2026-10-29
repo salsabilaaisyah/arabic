@@ -4,17 +4,19 @@ import {
   Sparkles,
   LogOut,
   ShieldCheck,
-  FolderKanban,
-  Wand2,
-  Settings,
+  BookOpen,
+  GitFork,
+  HelpCircle,
+  Bot,
   User,
-  Server,
-  CheckCircle,
+  Users,
 } from 'lucide-react';
 
+export type MainNavTab = 'vocab' | 'tree' | 'quiz' | 'tutor' | 'admin';
+
 interface NavbarProps {
-  currentTab: 'projects' | 'ai-studio' | 'admin';
-  setCurrentTab: (tab: 'projects' | 'ai-studio' | 'admin') => void;
+  currentTab: MainNavTab;
+  setCurrentTab: (tab: MainNavTab) => void;
 }
 
 export const Navbar: React.FC<NavbarProps> = ({ currentTab, setCurrentTab }) => {
@@ -28,64 +30,88 @@ export const Navbar: React.FC<NavbarProps> = ({ currentTab, setCurrentTab }) => 
 
   return (
     <>
-      <header className="sticky top-0 z-40 w-full border-b border-slate-800 bg-slate-950/80 backdrop-blur-xl">
+      <header className="sticky top-0 z-40 w-full border-b border-slate-800 bg-slate-950/85 backdrop-blur-xl">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
           {/* Brand */}
           <div className="flex items-center gap-6">
             <button
-              onClick={() => setCurrentTab('projects')}
-              className="flex items-center gap-2.5 text-left group focus:outline-none"
+              onClick={() => setCurrentTab('vocab')}
+              className="flex items-center gap-2.5 text-left group focus:outline-none cursor-pointer"
             >
-              <div className="w-9 h-9 rounded-xl bg-gradient-to-tr from-indigo-600 to-purple-600 flex items-center justify-center shadow-md shadow-indigo-600/30 group-hover:scale-105 transition-transform">
-                <Sparkles className="w-5 h-5 text-white" />
+              <div className="w-9 h-9 rounded-xl bg-gradient-to-tr from-emerald-600 to-teal-600 flex items-center justify-center shadow-md shadow-emerald-600/30 group-hover:scale-105 transition-transform">
+                <span className="font-arabic text-lg font-bold text-white leading-none">أ</span>
               </div>
               <div>
                 <span className="text-base sm:text-lg font-bold tracking-tight text-white flex items-center gap-1.5">
-                  IdeaFlow <span className="text-indigo-400">AI</span>
+                  Al-Usrah <span className="font-arabic text-emerald-400 font-semibold text-xl">الأُسْرَة</span>
                 </span>
                 <span className="hidden sm:block text-[10px] text-slate-400 font-medium">
-                  Workspace & Ideation Hub
+                  Belajar Bahasa Arab Tema Keluarga
                 </span>
               </div>
             </button>
 
-            {/* Navigation items */}
+            {/* Desktop Navigation items */}
             <nav className="hidden md:flex items-center gap-1">
               <button
-                onClick={() => setCurrentTab('projects')}
-                className={`flex items-center gap-2 px-3.5 py-1.5 rounded-lg text-xs font-semibold transition-colors ${
-                  currentTab === 'projects'
-                    ? 'bg-slate-800 text-white shadow-sm'
+                onClick={() => setCurrentTab('vocab')}
+                className={`flex items-center gap-2 px-3.5 py-1.5 rounded-xl text-xs font-semibold transition-colors cursor-pointer ${
+                  currentTab === 'vocab'
+                    ? 'bg-emerald-600 text-white shadow-sm shadow-emerald-600/30'
                     : 'text-slate-400 hover:text-slate-200 hover:bg-slate-900'
                 }`}
               >
-                <FolderKanban className="w-4 h-4 text-indigo-400" />
-                <span>Proyek & Kanban</span>
+                <BookOpen className="w-4 h-4 text-emerald-300" />
+                <span>Kosakata (المُفْرَدَات)</span>
               </button>
 
               <button
-                onClick={() => setCurrentTab('ai-studio')}
-                className={`flex items-center gap-2 px-3.5 py-1.5 rounded-lg text-xs font-semibold transition-colors ${
-                  currentTab === 'ai-studio'
-                    ? 'bg-indigo-600 text-white shadow-sm shadow-indigo-600/30'
+                onClick={() => setCurrentTab('tree')}
+                className={`flex items-center gap-2 px-3.5 py-1.5 rounded-xl text-xs font-semibold transition-colors cursor-pointer ${
+                  currentTab === 'tree'
+                    ? 'bg-emerald-600 text-white shadow-sm shadow-emerald-600/30'
                     : 'text-slate-400 hover:text-slate-200 hover:bg-slate-900'
                 }`}
               >
-                <Wand2 className="w-4 h-4 text-purple-400" />
-                <span>Studio Ide Gemini</span>
+                <GitFork className="w-4 h-4 text-teal-300" />
+                <span>Pohon Silsilah (الشَّجَرَة)</span>
+              </button>
+
+              <button
+                onClick={() => setCurrentTab('quiz')}
+                className={`flex items-center gap-2 px-3.5 py-1.5 rounded-xl text-xs font-semibold transition-colors cursor-pointer ${
+                  currentTab === 'quiz'
+                    ? 'bg-emerald-600 text-white shadow-sm shadow-emerald-600/30'
+                    : 'text-slate-400 hover:text-slate-200 hover:bg-slate-900'
+                }`}
+              >
+                <HelpCircle className="w-4 h-4 text-amber-300" />
+                <span>Kuis Latihan (الاِخْتِبَار)</span>
+              </button>
+
+              <button
+                onClick={() => setCurrentTab('tutor')}
+                className={`flex items-center gap-2 px-3.5 py-1.5 rounded-xl text-xs font-semibold transition-colors cursor-pointer ${
+                  currentTab === 'tutor'
+                    ? 'bg-emerald-600 text-white shadow-sm shadow-emerald-600/30'
+                    : 'text-slate-400 hover:text-slate-200 hover:bg-slate-900'
+                }`}
+              >
+                <Bot className="w-4 h-4 text-purple-300" />
+                <span>Ustadz AI (المُعَلِّم)</span>
               </button>
 
               {isAdmin && (
                 <button
                   onClick={() => setCurrentTab('admin')}
-                  className={`flex items-center gap-2 px-3.5 py-1.5 rounded-lg text-xs font-semibold transition-colors ${
+                  className={`flex items-center gap-2 px-3.5 py-1.5 rounded-xl text-xs font-semibold transition-colors cursor-pointer ${
                     currentTab === 'admin'
                       ? 'bg-amber-500/20 text-amber-300 border border-amber-500/40 shadow-sm'
                       : 'text-amber-400/80 hover:text-amber-300 hover:bg-amber-950/30'
                   }`}
                 >
                   <ShieldCheck className="w-4 h-4 text-amber-400" />
-                  <span>Panel Admin</span>
+                  <span>Admin</span>
                   <span className="px-1.5 py-0.2 text-[9px] rounded-full bg-amber-500/30 text-amber-200 border border-amber-500/40">
                     MASTER
                   </span>
@@ -94,14 +120,8 @@ export const Navbar: React.FC<NavbarProps> = ({ currentTab, setCurrentTab }) => 
             </nav>
           </div>
 
-          {/* Right section: System Status + Profile + Logout Button */}
+          {/* Right section: User Profile + Logout Button */}
           <div className="flex items-center gap-3">
-            {/* Status indicator */}
-            <div className="hidden lg:flex items-center gap-2 px-2.5 py-1 rounded-full bg-slate-900 border border-slate-800 text-[11px] text-slate-400">
-              <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
-              <span>Express /api &bull; Firestore</span>
-            </div>
-
             {/* User Profile Pill */}
             <div className="flex items-center gap-2.5 px-3 py-1.5 rounded-xl bg-slate-900 border border-slate-800 text-xs">
               {user?.photoURL ? (
@@ -111,16 +131,16 @@ export const Navbar: React.FC<NavbarProps> = ({ currentTab, setCurrentTab }) => 
                   className="w-6 h-6 rounded-full object-cover border border-slate-700"
                 />
               ) : (
-                <div className="w-6 h-6 rounded-full bg-indigo-900/80 border border-indigo-700/60 flex items-center justify-center text-indigo-300 text-[11px] font-bold">
+                <div className="w-6 h-6 rounded-full bg-emerald-900/80 border border-emerald-700/60 flex items-center justify-center text-emerald-300 text-[11px] font-bold">
                   {user?.displayName ? user.displayName.charAt(0).toUpperCase() : 'U'}
                 </div>
               )}
               <div className="hidden sm:flex flex-col text-left">
                 <span className="font-semibold text-slate-200 max-w-[120px] truncate leading-tight">
-                  {user?.displayName || 'Pengguna'}
+                  {user?.displayName || 'Thalib / Siswa'}
                 </span>
                 <span className="text-[10px] text-slate-400 max-w-[120px] truncate">
-                  {user?.email || 'Admin'}
+                  {user?.email || 'Akun Siswa'}
                 </span>
               </div>
               {/* Role badge */}
@@ -131,7 +151,7 @@ export const Navbar: React.FC<NavbarProps> = ({ currentTab, setCurrentTab }) => 
                     : 'bg-slate-800 text-slate-300'
                 }`}
               >
-                {isAdmin ? '👑 Admin' : 'Member'}
+                {isAdmin ? '👑 Admin' : 'Siswa'}
               </span>
             </div>
 
@@ -150,27 +170,45 @@ export const Navbar: React.FC<NavbarProps> = ({ currentTab, setCurrentTab }) => 
         {/* Mobile secondary navigation */}
         <div className="flex md:hidden items-center justify-around border-t border-slate-900 bg-slate-950 px-2 py-2">
           <button
-            onClick={() => setCurrentTab('projects')}
-            className={`flex flex-col items-center gap-1 text-[10px] py-1 px-3 rounded-lg ${
-              currentTab === 'projects' ? 'text-indigo-400 font-bold bg-slate-900' : 'text-slate-400'
+            onClick={() => setCurrentTab('vocab')}
+            className={`flex flex-col items-center gap-1 text-[10px] py-1 px-2 rounded-lg ${
+              currentTab === 'vocab' ? 'text-emerald-400 font-bold bg-slate-900' : 'text-slate-400'
             }`}
           >
-            <FolderKanban className="w-4 h-4" />
-            <span>Proyek</span>
+            <BookOpen className="w-4 h-4" />
+            <span>Kosakata</span>
           </button>
           <button
-            onClick={() => setCurrentTab('ai-studio')}
-            className={`flex flex-col items-center gap-1 text-[10px] py-1 px-3 rounded-lg ${
-              currentTab === 'ai-studio' ? 'text-purple-400 font-bold bg-slate-900' : 'text-slate-400'
+            onClick={() => setCurrentTab('tree')}
+            className={`flex flex-col items-center gap-1 text-[10px] py-1 px-2 rounded-lg ${
+              currentTab === 'tree' ? 'text-teal-400 font-bold bg-slate-900' : 'text-slate-400'
             }`}
           >
-            <Wand2 className="w-4 h-4" />
-            <span>Studio AI</span>
+            <GitFork className="w-4 h-4" />
+            <span>Silsilah</span>
+          </button>
+          <button
+            onClick={() => setCurrentTab('quiz')}
+            className={`flex flex-col items-center gap-1 text-[10px] py-1 px-2 rounded-lg ${
+              currentTab === 'quiz' ? 'text-amber-400 font-bold bg-slate-900' : 'text-slate-400'
+            }`}
+          >
+            <HelpCircle className="w-4 h-4" />
+            <span>Kuis</span>
+          </button>
+          <button
+            onClick={() => setCurrentTab('tutor')}
+            className={`flex flex-col items-center gap-1 text-[10px] py-1 px-2 rounded-lg ${
+              currentTab === 'tutor' ? 'text-purple-400 font-bold bg-slate-900' : 'text-slate-400'
+            }`}
+          >
+            <Bot className="w-4 h-4" />
+            <span>Tutor AI</span>
           </button>
           {isAdmin && (
             <button
               onClick={() => setCurrentTab('admin')}
-              className={`flex flex-col items-center gap-1 text-[10px] py-1 px-3 rounded-lg ${
+              className={`flex flex-col items-center gap-1 text-[10px] py-1 px-2 rounded-lg ${
                 currentTab === 'admin' ? 'text-amber-400 font-bold bg-slate-900' : 'text-amber-400/70'
               }`}
             >
@@ -191,7 +229,7 @@ export const Navbar: React.FC<NavbarProps> = ({ currentTab, setCurrentTab }) => 
             <div>
               <h3 className="text-lg font-bold text-white">Konfirmasi Logout</h3>
               <p className="text-xs text-slate-400 mt-1">
-                Apakah Anda yakin ingin keluar dari sesi akun saat ini?
+                Apakah Anda yakin ingin keluar dari sesi akun pembelajaran?
               </p>
             </div>
             <div className="grid grid-cols-2 gap-3 pt-2">

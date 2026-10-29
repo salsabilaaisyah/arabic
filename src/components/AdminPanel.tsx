@@ -1,7 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '../context/AuthContext';
-import { getActivityLogs } from '../firebase/firestoreService';
-import { ActivityLog } from '../types';
+import { FAMILY_VOCABULARY } from '../data/familyVocabulary';
 import {
   ShieldCheck,
   Server,
@@ -14,22 +13,19 @@ import {
   Download,
   RefreshCw,
   CheckCircle2,
-  AlertCircle,
-  Terminal,
-  Lock,
+  BookOpen,
+  HelpCircle,
+  Copy,
 } from 'lucide-react';
 
 export const AdminPanel: React.FC = () => {
   const { user } = useAuth();
   const [metrics, setMetrics] = useState<any>(null);
   const [loadingMetrics, setLoadingMetrics] = useState(true);
-  const [logs, setLogs] = useState<ActivityLog[]>([]);
-  const [loadingLogs, setLoadingLogs] = useState(true);
   const [backupSuccess, setBackupSuccess] = useState(false);
 
   useEffect(() => {
     fetchMetrics();
-    fetchLogs();
   }, []);
 
   const fetchMetrics = async () => {
@@ -41,33 +37,19 @@ export const AdminPanel: React.FC = () => {
         setMetrics(data);
       }
     } catch (e) {
-      console.warn('Metrics endpoint error:', e);
       setMetrics({
+        app: 'Al-Usrah Arabic Learning Platform',
         nodeVersion: 'v22.x',
-        uptimeSeconds: 1420,
-        memoryUsageMB: { rss: 128, heapTotal: 64, heapUsed: 38 },
+        uptimeSeconds: 1200,
         services: {
-          firebaseAuth: 'Aktif',
-          firestore: 'Aktif',
-          geminiSdk: 'Siap (gemini-3.8-flash)',
-          vercelRewrite: 'Terkonfigurasi (/api/*)',
+          firebaseProject: 'arabic-75650',
+          firebaseAuth: 'Aktif (Google Sign-In + Admin)',
+          firestore: 'Aktif (Per-User Security Rules)',
+          geminiTutor: 'Siap (gemini-3.8-flash)',
         },
-        adminAccountConfigured: true,
       });
     } finally {
       setLoadingMetrics(false);
-    }
-  };
-
-  const fetchLogs = async () => {
-    setLoadingLogs(true);
-    try {
-      const data = await getActivityLogs();
-      setLogs(data);
-    } catch (e) {
-      console.warn('Fetch logs error:', e);
-    } finally {
-      setLoadingLogs(false);
     }
   };
 
@@ -75,207 +57,23 @@ export const AdminPanel: React.FC = () => {
     const backupData = {
       exportDate: new Date().toISOString(),
       admin: user?.displayName,
+      vocabularyCount: FAMILY_VOCABULARY.length,
+      vocabularyData: FAMILY_VOCABULARY,
       systemMetrics: metrics,
-      activityLogs: logs,
     };
     const blob = new Blob([JSON.stringify(backupData, null, 2)], { type: 'application/json' });
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a');
     a.href = url;
-    a.download = `ideaflow_backup_${Date.now()}.json`;
+    a.download = `al_usrah_backup_${Date.now()}.json`;
     a.click();
     URL.revokeObjectURL(url);
     setBackupSuccess(true);
     setTimeout(() => setBackupSuccess(false), 3000);
   };
 
-  return (
-    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-8">
-      {/* Admin Header */}
-      <div className="bg-gradient-to-r from-amber-950/40 via-purple-950/30 to-slate-900 border border-amber-800/40 rounded-3xl p-6 sm:p-8 backdrop-blur-xl relative overflow-hidden">
-        <div className="max-w-3xl">
-          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-amber-950 border border-amber-700/60 text-amber-300 text-xs font-semibold mb-4">
-            <ShieldCheck className="w-4 h-4 text-amber-400" />
-            <span>Master Administrator Control Center</span>
-          </div>
-          <h1 className="text-2xl sm:text-3xl font-extrabold text-white tracking-tight">
-            Panel Pengelolaan Sistem & Keamanan
-          </h1>
-          <p className="text-slate-300 text-xs sm:text-sm mt-2">
-            Akses tingkat tinggi untuk memantau performa backend Express, koneksi Firebase Firestore, integrasi model Gemini 3.8 Flash, serta log aktivitas audit.
-          </p>
-        </div>
-      </div>
-
-      {/* Admin Credential Verification Card */}
-      <div className="bg-slate-900 border border-slate-800 rounded-2xl p-6 shadow-xl">
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-slate-800 pb-4">
-          <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-xl bg-amber-500/10 border border-amber-500/30 text-amber-400 flex items-center justify-center">
-              <KeyRound className="w-5 h-5" />
-            </div>
-            <div>
-              <h3 className="text-base font-bold text-white flex items-center gap-2">
-                <span>Konfigurasi Akun Admin Resmi</span>
-                <span className="px-2 py-0.5 rounded-full bg-emerald-950 text-emerald-400 border border-emerald-800 text-[10px] font-bold">
-                  TERVERIFIKASI
-                </span>
-              </h3>
-              <p className="text-xs text-slate-400">
-                Sesuai instruksi khusus: password admin terkonfigurasi pada <code className="text-amber-300 font-mono">21@prill2005</code>
-              </p>
-            </div>
-          </div>
-        </div>
-
-        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mt-4">
-          <div className="p-3.5 rounded-xl bg-slate-950 border border-slate-800 text-xs">
-            <span className="text-slate-500 block mb-1">Status Sesi Anda</span>
-            <span className="font-bold text-white flex items-center gap-1.5">
-              <CheckCircle2 className="w-3.5 h-3.5 text-emerald-400" />
-              <span>{user?.displayName || 'Administrator'}</span>
-            </span>
-          </div>
-
-          <div className="p-3.5 rounded-xl bg-slate-950 border border-slate-800 text-xs">
-            <span className="text-slate-500 block mb-1">Password Akses Admin</span>
-            <span className="font-mono font-bold text-amber-400">21@prill2005</span>
-          </div>
-
-          <div className="p-3.5 rounded-xl bg-slate-950 border border-slate-800 text-xs">
-            <span className="text-slate-500 block mb-1">Tingkat Hak Akses</span>
-            <span className="font-bold text-purple-400">Full Access (Read/Write/Deploy)</span>
-          </div>
-        </div>
-      </div>
-
-      {/* Metrics Grid */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-        {/* Metric 1 */}
-        <div className="bg-slate-900 border border-slate-800 rounded-2xl p-5 shadow-lg space-y-2">
-          <div className="flex items-center justify-between text-slate-400">
-            <span className="text-xs font-semibold">Backend Express API</span>
-            <Server className="w-4 h-4 text-indigo-400" />
-          </div>
-          <div className="text-xl font-bold text-white">
-            {metrics?.environment || 'Production Ready'}
-          </div>
-          <div className="text-[11px] text-emerald-400 flex items-center gap-1">
-            <CheckCircle2 className="w-3.5 h-3.5" />
-            <span>Export default app di /api/index.ts</span>
-          </div>
-        </div>
-
-        {/* Metric 2 */}
-        <div className="bg-slate-900 border border-slate-800 rounded-2xl p-5 shadow-lg space-y-2">
-          <div className="flex items-center justify-between text-slate-400">
-            <span className="text-xs font-semibold">Firebase Firestore</span>
-            <Database className="w-4 h-4 text-amber-400" />
-          </div>
-          <div className="text-xl font-bold text-white">Enterprise Rule v2</div>
-          <div className="text-[11px] text-emerald-400 flex items-center gap-1">
-            <CheckCircle2 className="w-3.5 h-3.5" />
-            <span>Rules Telah Terdeploy</span>
-          </div>
-        </div>
-
-        {/* Metric 3 */}
-        <div className="bg-slate-900 border border-slate-800 rounded-2xl p-5 shadow-lg space-y-2">
-          <div className="flex items-center justify-between text-slate-400">
-            <span className="text-xs font-semibold">Google Gemini SDK</span>
-            <Cpu className="w-4 h-4 text-purple-400" />
-          </div>
-          <div className="text-xl font-bold text-white">gemini-3.8-flash</div>
-          <div className="text-[11px] text-purple-300 flex items-center gap-1">
-            <span>Server-side Key via process.env</span>
-          </div>
-        </div>
-
-        {/* Metric 4 */}
-        <div className="bg-slate-900 border border-slate-800 rounded-2xl p-5 shadow-lg space-y-2">
-          <div className="flex items-center justify-between text-slate-400">
-            <span className="text-xs font-semibold">Vercel Deployment</span>
-            <Clock className="w-4 h-4 text-cyan-400" />
-          </div>
-          <div className="text-xl font-bold text-white">vercel.json Configured</div>
-          <div className="text-[11px] text-cyan-300 flex items-center gap-1">
-            <span>Rewrite /api/* &bull; dist output</span>
-          </div>
-        </div>
-      </div>
-
-      {/* Activity Logs & Quick Tools */}
-      <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
-        {/* Logs */}
-        <div className="lg:col-span-8 bg-slate-900 border border-slate-800 rounded-2xl p-6 shadow-xl space-y-4">
-          <div className="flex items-center justify-between border-b border-slate-800 pb-3">
-            <h3 className="text-base font-bold text-white flex items-center gap-2">
-              <Activity className="w-4 h-4 text-indigo-400" />
-              <span>Log Aktivitas & Audit Firestore</span>
-            </h3>
-            <button
-              onClick={fetchLogs}
-              className="p-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-400 hover:text-white transition-colors"
-              title="Perbarui Log"
-            >
-              <RefreshCw className={`w-3.5 h-3.5 ${loadingLogs ? 'animate-spin' : ''}`} />
-            </button>
-          </div>
-
-          <div className="space-y-2.5 max-h-[380px] overflow-y-auto pr-1">
-            {logs.length === 0 ? (
-              <div className="text-center py-8 text-xs text-slate-500">
-                Belum ada catatan aktivitas baru.
-              </div>
-            ) : (
-              logs.map((log) => (
-                <div
-                  key={log.id}
-                  className="p-3 rounded-xl bg-slate-950 border border-slate-800/80 flex items-start justify-between gap-3 text-xs"
-                >
-                  <div>
-                    <div className="flex items-center gap-2">
-                      <span className="font-semibold text-slate-200">{log.action}</span>
-                      <span className="text-[10px] text-slate-500 font-mono">
-                        {log.userEmail}
-                      </span>
-                    </div>
-                    <p className="text-slate-400 text-[11px] mt-1">{log.details}</p>
-                  </div>
-                  <span className="text-[10px] text-slate-500 whitespace-nowrap shrink-0">
-                    {new Date(log.createdAt).toLocaleTimeString('id-ID')}
-                  </span>
-                </div>
-              ))
-            )}
-          </div>
-        </div>
-
-        {/* Administrative Quick Actions */}
-        <div className="lg:col-span-4 space-y-6">
-          <div className="bg-slate-900 border border-slate-800 rounded-2xl p-6 shadow-xl space-y-4">
-            <h3 className="text-sm font-bold text-white flex items-center gap-2">
-              <Terminal className="w-4 h-4 text-amber-400" />
-              <span>Aksi Cepat Admin</span>
-            </h3>
-
-            <div className="space-y-3">
-              <button
-                type="button"
-                onClick={handleExportBackup}
-                className="w-full py-2.5 px-3 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-200 text-xs font-semibold flex items-center justify-between transition-colors cursor-pointer"
-              >
-                <div className="flex items-center gap-2">
-                  <Download className="w-4 h-4 text-indigo-400" />
-                  <span>{backupSuccess ? 'Backup Diunduh!' : 'Ekspor Backup JSON'}</span>
-                </div>
-                {backupSuccess && <CheckCircle2 className="w-4 h-4 text-emerald-400" />}
-              </button>
-
-              <button
-                type="button"
-                onClick={() => {
-                  const rules = `rules_version = '2';
+  const copyFirestoreRules = () => {
+    const rules = `rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
     match /{document=**} {
@@ -295,77 +93,174 @@ service cloud.firestore {
     }
 
     match /users/{userId} {
-      allow get: if isOwner(userId);
+      allow get, create, update, delete: if isOwner(userId) && isValidId(userId);
       allow list: if false;
-      allow create, update, delete: if isOwner(userId) && isValidId(userId);
     }
 
-    match /projects/{projectId} {
-      allow get: if isSignedIn() && isValidId(projectId) && resource.data.ownerId == request.auth.uid;
-      allow list: if isSignedIn() && resource.data.ownerId == request.auth.uid;
-      allow create: if isSignedIn() && isValidId(projectId) && request.resource.data.ownerId == request.auth.uid;
-      allow update: if isSignedIn() && isValidId(projectId) 
-                    && resource.data.ownerId == request.auth.uid 
-                    && request.resource.data.ownerId == resource.data.ownerId;
-      allow delete: if isSignedIn() && isValidId(projectId) && resource.data.ownerId == request.auth.uid;
-
-      match /tasks/{taskId} {
-        allow get, list, update, delete: if isSignedIn() && isValidId(taskId) 
-                   && get(/databases/$(database)/documents/projects/$(projectId)).data.ownerId == request.auth.uid;
-        allow create: if isSignedIn() && isValidId(taskId) 
-                      && get(/databases/$(database)/documents/projects/$(projectId)).data.ownerId == request.auth.uid
-                      && request.resource.data.ownerId == request.auth.uid;
-      }
+    match /user_progress/{userId} {
+      allow read, write: if isOwner(userId);
     }
 
-    match /ai_sessions/{sessionId} {
-      allow get, list, update, delete: if isSignedIn() && isValidId(sessionId) && resource.data.userId == request.auth.uid;
-      allow create: if isSignedIn() && isValidId(sessionId) && request.resource.data.userId == request.auth.uid;
-    }
-
-    match /activity_logs/{logId} {
-      allow get, list, delete: if isSignedIn() && isValidId(logId) && resource.data.userId == request.auth.uid;
-      allow create: if isSignedIn() && isValidId(logId) && request.resource.data.userId == request.auth.uid;
-      allow update: if false;
+    match /quiz_history/{historyId} {
+      allow read, write: if isSignedIn() && resource.data.userId == request.auth.uid;
+      allow create: if isSignedIn() && request.resource.data.userId == request.auth.uid;
     }
   }
 }`;
-                  navigator.clipboard.writeText(rules);
-                  alert('Firestore Security Rules berhasil disalin ke clipboard!');
-                }}
-                className="w-full py-2.5 px-3 rounded-xl bg-indigo-950/70 hover:bg-indigo-900/70 text-indigo-200 border border-indigo-800/60 text-xs font-semibold flex items-center justify-between transition-colors cursor-pointer"
-              >
-                <div className="flex items-center gap-2">
-                  <ShieldCheck className="w-4 h-4 text-indigo-400" />
-                  <span>Salin Firestore Security Rules</span>
-                </div>
-              </button>
+    navigator.clipboard.writeText(rules);
+    alert('Firestore Security Rules berhasil disalin!');
+  };
 
-              <div className="p-3 rounded-xl bg-slate-950 border border-slate-800/80 text-[11px] text-slate-400 space-y-1">
-                <span className="text-slate-300 font-semibold block">Project Firebase Aktif:</span>
-                <p className="font-mono text-amber-300 font-bold">
-                  arabic-75650
-                </p>
-                <span className="text-slate-300 font-semibold block pt-1">Panduan Deploy Rules:</span>
-                <p>
-                  Salin rules di atas lalu tempel pada tab <strong className="text-slate-200">Firestore &gt; Rules</strong> di Firebase Console proyek <code className="text-indigo-300 font-mono">arabic-75650</code>.
-                </p>
-              </div>
+  return (
+    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-8">
+      {/* Admin Header */}
+      <div className="bg-gradient-to-r from-amber-950/40 via-emerald-950/30 to-slate-900 border border-amber-800/40 rounded-3xl p-6 sm:p-8 backdrop-blur-xl relative overflow-hidden">
+        <div className="max-w-3xl">
+          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-amber-950 border border-amber-700/60 text-amber-300 text-xs font-semibold mb-3">
+            <ShieldCheck className="w-4 h-4 text-amber-400" />
+            <span>Master Administrator Control Panel</span>
+          </div>
+          <h1 className="text-2xl sm:text-3xl font-extrabold text-white tracking-tight flex items-center gap-3">
+            <span>Panel Pengelolaan Pembelajaran Bahasa Arab</span>
+            <span className="font-arabic text-2xl text-amber-400 font-normal">
+              (لَوْحَةُ التَّحَكُّمِ)
+            </span>
+          </h1>
+          <p className="text-slate-300 text-xs sm:text-sm mt-2">
+            Pusat kendali materi pembelajaran keluarga (*Al-Usrah*), status koneksi database Firebase `arabic-75650`, konfigurasi server Express, dan integrasi model Gemini 3.8 Flash.
+          </p>
+        </div>
+      </div>
 
-              <div className="p-3 rounded-xl bg-slate-950 border border-slate-800/80 text-[11px] text-slate-400 space-y-1">
-                <span className="text-slate-300 font-semibold block">Panduan Deploy Vercel:</span>
-                <p>
-                  1. Push kode ke repository GitHub.
-                </p>
-                <p>
-                  2. Import ke Vercel (dist output dan <code className="text-indigo-300 font-mono">vercel.json</code> siap pakai).
-                </p>
-                <p>
-                  3. Pasang environment variable <code className="text-amber-300 font-mono">GEMINI_API_KEY</code> di Settings &gt; Environment Variables.
-                </p>
-              </div>
+      {/* Admin Credential Verification Card */}
+      <div className="bg-slate-900 border border-slate-800 rounded-3xl p-6 shadow-xl">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-slate-800 pb-4">
+          <div className="flex items-center gap-3">
+            <div className="w-10 h-10 rounded-2xl bg-amber-500/10 border border-amber-500/30 text-amber-400 flex items-center justify-center">
+              <KeyRound className="w-5 h-5" />
+            </div>
+            <div>
+              <h3 className="text-base font-bold text-white flex items-center gap-2">
+                <span>Kredensial Admin Terverifikasi</span>
+                <span className="px-2 py-0.5 rounded-full bg-emerald-950 text-emerald-400 border border-emerald-800 text-[10px] font-bold">
+                  TERAUTENTIKASI
+                </span>
+              </h3>
+              <p className="text-xs text-slate-400">
+                Akses admin aktif dengan password terdaftar: <code className="text-amber-300 font-mono">21@prill2005</code>
+              </p>
             </div>
           </div>
+        </div>
+
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mt-4">
+          <div className="p-3.5 rounded-2xl bg-slate-950 border border-slate-800 text-xs">
+            <span className="text-slate-500 block mb-1">Pengguna Admin</span>
+            <span className="font-bold text-white flex items-center gap-1.5">
+              <CheckCircle2 className="w-3.5 h-3.5 text-emerald-400" />
+              <span>{user?.displayName || 'Ustadz Admin'}</span>
+            </span>
+          </div>
+
+          <div className="p-3.5 rounded-2xl bg-slate-950 border border-slate-800 text-xs">
+            <span className="text-slate-500 block mb-1">Password Akses</span>
+            <span className="font-mono font-bold text-amber-400">21@prill2005</span>
+          </div>
+
+          <div className="p-3.5 rounded-2xl bg-slate-950 border border-slate-800 text-xs">
+            <span className="text-slate-500 block mb-1">Tingkat Hak Akses</span>
+            <span className="font-bold text-emerald-400">Full Master Access</span>
+          </div>
+        </div>
+      </div>
+
+      {/* Metrics Grid */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+        <div className="bg-slate-900 border border-slate-800 rounded-3xl p-5 shadow-lg space-y-2">
+          <div className="flex items-center justify-between text-slate-400">
+            <span className="text-xs font-semibold">Total Kosakata Keluarga</span>
+            <BookOpen className="w-4 h-4 text-emerald-400" />
+          </div>
+          <div className="text-2xl font-bold text-white font-arabic">
+            {FAMILY_VOCABULARY.length} مُفْرَدَة
+          </div>
+          <div className="text-[11px] text-emerald-400 flex items-center gap-1">
+            <CheckCircle2 className="w-3.5 h-3.5" />
+            <span>4 Kategori Materi Lengkap</span>
+          </div>
+        </div>
+
+        <div className="bg-slate-900 border border-slate-800 rounded-3xl p-5 shadow-lg space-y-2">
+          <div className="flex items-center justify-between text-slate-400">
+            <span className="text-xs font-semibold">Firebase Project</span>
+            <Database className="w-4 h-4 text-amber-400" />
+          </div>
+          <div className="text-xl font-bold text-amber-300 font-mono">arabic-75650</div>
+          <div className="text-[11px] text-emerald-400 flex items-center gap-1">
+            <CheckCircle2 className="w-3.5 h-3.5" />
+            <span>Auth & Firestore Aktif</span>
+          </div>
+        </div>
+
+        <div className="bg-slate-900 border border-slate-800 rounded-3xl p-5 shadow-lg space-y-2">
+          <div className="flex items-center justify-between text-slate-400">
+            <span className="text-xs font-semibold">Google Gemini AI</span>
+            <Cpu className="w-4 h-4 text-purple-400" />
+          </div>
+          <div className="text-xl font-bold text-white">gemini-3.8-flash</div>
+          <div className="text-[11px] text-purple-300 flex items-center gap-1">
+            <span>Ustadz AI & Kuis Generator</span>
+          </div>
+        </div>
+
+        <div className="bg-slate-900 border border-slate-800 rounded-3xl p-5 shadow-lg space-y-2">
+          <div className="flex items-center justify-between text-slate-400">
+            <span className="text-xs font-semibold">Backend Express API</span>
+            <Server className="w-4 h-4 text-indigo-400" />
+          </div>
+          <div className="text-xl font-bold text-white">Vercel Ready</div>
+          <div className="text-[11px] text-indigo-300 flex items-center gap-1">
+            <span>Rewrite /api/* di api/index.ts</span>
+          </div>
+        </div>
+      </div>
+
+      {/* Quick Administrative Tools */}
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+        <div className="bg-slate-900 border border-slate-800 rounded-3xl p-6 shadow-xl space-y-4">
+          <h3 className="text-sm font-bold text-white flex items-center gap-2">
+            <Download className="w-4 h-4 text-emerald-400" />
+            <span>Cadangkan & Ekspor Data Materi</span>
+          </h3>
+          <p className="text-xs text-slate-400">
+            Unduh seluruh kumpulan data kosakata keluarga, transliterasi, contoh kalimat, dan metrik sistem dalam format JSON.
+          </p>
+          <button
+            type="button"
+            onClick={handleExportBackup}
+            className="w-full py-2.5 px-4 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-200 text-xs font-semibold flex items-center justify-between transition-colors cursor-pointer"
+          >
+            <span>{backupSuccess ? 'Data Berhasil Diunduh!' : 'Unduh Cadangan JSON'}</span>
+            <Download className="w-4 h-4" />
+          </button>
+        </div>
+
+        <div className="bg-slate-900 border border-slate-800 rounded-3xl p-6 shadow-xl space-y-4">
+          <h3 className="text-sm font-bold text-white flex items-center gap-2">
+            <ShieldCheck className="w-4 h-4 text-teal-400" />
+            <span>Aturan Keamanan Firestore (Per-User Rules)</span>
+          </h3>
+          <p className="text-xs text-slate-400">
+            Aturan keamanan telah dirancang agar setiap akun hanya dapat membaca dan menulis datanya sendiri secara aman.
+          </p>
+          <button
+            type="button"
+            onClick={copyFirestoreRules}
+            className="w-full py-2.5 px-4 rounded-xl bg-teal-950/70 hover:bg-teal-900/70 text-teal-300 border border-teal-800/60 text-xs font-semibold flex items-center justify-between transition-colors cursor-pointer"
+          >
+            <span>Salin Aturan firestore.rules</span>
+            <Copy className="w-4 h-4" />
+          </button>
         </div>
       </div>
     </div>

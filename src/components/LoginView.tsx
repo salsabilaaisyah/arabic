@@ -3,8 +3,7 @@ import { useAuth } from '../context/AuthContext';
 import {
   Sparkles,
   ShieldCheck,
-  Database,
-  Server,
+  BookOpen,
   Lock,
   User,
   ArrowRight,
@@ -18,7 +17,7 @@ import {
 export const LoginView: React.FC = () => {
   const { loginWithGoogle, loginWithAdmin } = useAuth();
   const [activeTab, setActiveTab] = useState<'admin' | 'google'>('admin');
-  
+
   // Admin form state
   const [adminUsername, setAdminUsername] = useState('admin');
   const [adminPassword, setAdminPassword] = useState('21@prill2005');
@@ -64,32 +63,38 @@ export const LoginView: React.FC = () => {
   return (
     <div className="min-h-screen bg-slate-950 flex flex-col justify-center items-center px-4 py-12 relative overflow-hidden">
       {/* Background ambient lighting */}
-      <div className="absolute top-1/4 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[350px] bg-gradient-to-tr from-indigo-600/20 via-purple-600/20 to-cyan-500/10 blur-[120px] rounded-full pointer-events-none" />
+      <div className="absolute top-1/4 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[350px] bg-gradient-to-tr from-emerald-600/20 via-teal-600/20 to-indigo-500/10 blur-[120px] rounded-full pointer-events-none" />
 
       <div className="w-full max-w-4xl relative z-10 flex flex-col items-center">
         {/* App Title & Badge */}
-        <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-indigo-950/70 border border-indigo-700/50 text-indigo-300 text-xs font-semibold mb-6 shadow-sm backdrop-blur-md">
-          <Sparkles className="w-4 h-4 text-indigo-400 animate-pulse" />
-          <span>IdeaFlow AI Workspace &bull; Firebase Auth &bull; Gemini 3.8</span>
+        <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-emerald-950/70 border border-emerald-700/50 text-emerald-300 text-xs font-semibold mb-6 shadow-sm backdrop-blur-md">
+          <Sparkles className="w-4 h-4 text-emerald-400 animate-pulse" />
+          <span>Al-Usrah (الأُسْرَة) &bull; Belajar Bahasa Arab Tema Keluarga</span>
         </div>
 
-        <h1 className="text-3xl sm:text-5xl font-extrabold text-center tracking-tight text-white mb-3">
-          Ruang Kerja Ide & Kolaborasi <span className="bg-gradient-to-r from-indigo-400 via-purple-300 to-cyan-300 bg-clip-text text-transparent">Cerdas AI</span>
+        <h1 className="text-3xl sm:text-5xl font-extrabold text-center tracking-tight text-white mb-2">
+          Pembelajaran Bahasa Arab <span className="bg-gradient-to-r from-emerald-400 via-teal-300 to-cyan-300 bg-clip-text text-transparent">Tema Keluarga</span>
         </h1>
-        <p className="text-slate-400 text-center max-w-xl text-sm sm:text-base mb-8">
-          Akses workspace kolaboratif dengan login pengguna terverifikasi. Masuk melalui akun Google Firebase atau kredensial Administrator.
+        <p className="font-arabic text-2xl sm:text-3xl text-emerald-400 text-center mb-4">
+          (دِرَاسَةُ اللُّغَةِ العَرَبِيَّةِ: أَفْرَادُ الأُسْرَةِ)
+        </p>
+        <p className="text-slate-400 text-center max-w-xl text-xs sm:text-sm mb-8">
+          Akses materi kosakata interaktif, pohon silsilah keluarga, kuis latihan bertingkat, dan bimbingan Ustadz AI cerdas. Masuk menggunakan Google Sign-In atau akun Administrator.
         </p>
 
         {/* Login Box */}
-        <div className="w-full max-w-md bg-slate-900/90 border border-slate-800 rounded-2xl p-6 sm:p-8 shadow-2xl backdrop-blur-xl">
+        <div className="w-full max-w-md bg-slate-900/90 border border-slate-800 rounded-3xl p-6 sm:p-8 shadow-2xl backdrop-blur-xl">
           {/* Tab Selection */}
-          <div className="grid grid-cols-2 p-1 bg-slate-950/70 rounded-xl border border-slate-800/80 mb-6">
+          <div className="grid grid-cols-2 p-1 bg-slate-950/70 rounded-2xl border border-slate-800/80 mb-6">
             <button
               type="button"
-              onClick={() => { setActiveTab('admin'); setErrorMsg(''); }}
-              className={`flex items-center justify-center gap-2 py-2.5 rounded-lg text-xs sm:text-sm font-semibold transition-all ${
+              onClick={() => {
+                setActiveTab('admin');
+                setErrorMsg('');
+              }}
+              className={`flex items-center justify-center gap-2 py-2.5 rounded-xl text-xs sm:text-sm font-semibold transition-all ${
                 activeTab === 'admin'
-                  ? 'bg-indigo-600 text-white shadow-md'
+                  ? 'bg-emerald-600 text-white shadow-md shadow-emerald-600/30'
                   : 'text-slate-400 hover:text-slate-200'
               }`}
             >
@@ -98,10 +103,13 @@ export const LoginView: React.FC = () => {
             </button>
             <button
               type="button"
-              onClick={() => { setActiveTab('google'); setErrorMsg(''); }}
-              className={`flex items-center justify-center gap-2 py-2.5 rounded-lg text-xs sm:text-sm font-semibold transition-all ${
+              onClick={() => {
+                setActiveTab('google');
+                setErrorMsg('');
+              }}
+              className={`flex items-center justify-center gap-2 py-2.5 rounded-xl text-xs sm:text-sm font-semibold transition-all ${
                 activeTab === 'google'
-                  ? 'bg-indigo-600 text-white shadow-md'
+                  ? 'bg-emerald-600 text-white shadow-md shadow-emerald-600/30'
                   : 'text-slate-400 hover:text-slate-200'
               }`}
             >
@@ -129,7 +137,7 @@ export const LoginView: React.FC = () => {
 
           {/* Error Message */}
           {errorMsg && (
-            <div className="mb-5 p-3 rounded-lg bg-rose-500/10 border border-rose-500/30 text-rose-400 text-xs sm:text-sm flex items-start gap-2">
+            <div className="mb-5 p-3 rounded-xl bg-rose-500/10 border border-rose-500/30 text-rose-400 text-xs sm:text-sm flex items-start gap-2">
               <AlertCircle className="w-4 h-4 shrink-0 mt-0.5" />
               <span>{errorMsg}</span>
             </div>
@@ -151,8 +159,8 @@ export const LoginView: React.FC = () => {
                     required
                     value={adminUsername}
                     onChange={(e) => setAdminUsername(e.target.value)}
-                    placeholder="Contoh: admin atau username anda"
-                    className="w-full pl-10 pr-4 py-2.5 bg-slate-950/70 border border-slate-700 rounded-xl text-sm text-slate-100 placeholder-slate-500 focus:outline-none focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 transition-colors"
+                    placeholder="Masukkan username admin"
+                    className="w-full pl-10 pr-4 py-2.5 bg-slate-950/70 border border-slate-700 rounded-xl text-sm text-slate-100 placeholder-slate-500 focus:outline-none focus:border-emerald-500 transition-colors"
                   />
                 </div>
               </div>
@@ -165,9 +173,9 @@ export const LoginView: React.FC = () => {
                   <button
                     type="button"
                     onClick={setAdminPreset}
-                    className="text-[11px] text-indigo-400 hover:text-indigo-300 underline underline-offset-2 transition-colors"
+                    className="text-[11px] text-emerald-400 hover:text-emerald-300 underline underline-offset-2 transition-colors"
                   >
-                    Set Password Default
+                    Gunakan Default
                   </button>
                 </div>
                 <div className="relative">
@@ -180,7 +188,7 @@ export const LoginView: React.FC = () => {
                     value={adminPassword}
                     onChange={(e) => setAdminPassword(e.target.value)}
                     placeholder="Masukkan password admin"
-                    className="w-full pl-10 pr-10 py-2.5 bg-slate-950/70 border border-slate-700 rounded-xl text-sm text-slate-100 placeholder-slate-500 focus:outline-none focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 transition-colors"
+                    className="w-full pl-10 pr-10 py-2.5 bg-slate-950/70 border border-slate-700 rounded-xl text-sm text-slate-100 placeholder-slate-500 focus:outline-none focus:border-emerald-500 transition-colors"
                   />
                   <button
                     type="button"
@@ -192,12 +200,12 @@ export const LoginView: React.FC = () => {
                 </div>
               </div>
 
-              {/* Password notice card */}
-              <div className="p-3 bg-indigo-950/40 border border-indigo-800/40 rounded-xl text-xs text-indigo-300/90 flex items-start gap-2.5">
-                <Terminal className="w-4 h-4 text-indigo-400 shrink-0 mt-0.5" />
+              {/* Password indicator */}
+              <div className="p-3 bg-emerald-950/40 border border-emerald-800/40 rounded-2xl text-xs text-emerald-300/90 flex items-start gap-2.5">
+                <Terminal className="w-4 h-4 text-emerald-400 shrink-0 mt-0.5" />
                 <div>
                   <span className="font-semibold text-white">Kredensial Sesuai Permintaan:</span>
-                  <div className="mt-1 font-mono text-[11px] text-indigo-200 bg-slate-950/60 px-2 py-1 rounded border border-indigo-900/60">
+                  <div className="mt-1 font-mono text-[11px] text-emerald-200 bg-slate-950/60 px-2.5 py-1 rounded-lg border border-emerald-900/60">
                     Password: <span className="text-amber-400 font-bold select-all">21@prill2005</span>
                   </div>
                 </div>
@@ -206,7 +214,7 @@ export const LoginView: React.FC = () => {
               <button
                 type="submit"
                 disabled={isSubmitting}
-                className="w-full py-3 px-4 bg-gradient-to-r from-indigo-600 to-indigo-500 hover:from-indigo-500 hover:to-indigo-400 text-white font-semibold rounded-xl shadow-lg shadow-indigo-600/30 flex items-center justify-center gap-2 transition-all transform active:scale-[0.99] disabled:opacity-50 cursor-pointer"
+                className="w-full py-3 px-4 bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white font-semibold rounded-xl shadow-lg shadow-emerald-600/30 flex items-center justify-center gap-2 transition-all transform active:scale-[0.99] disabled:opacity-50 cursor-pointer"
               >
                 {isSubmitting ? (
                   <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
@@ -224,7 +232,7 @@ export const LoginView: React.FC = () => {
           {activeTab === 'google' && (
             <div className="space-y-4 py-2">
               <p className="text-xs text-slate-400 text-center">
-                Masuk aman menggunakan autentikasi Firebase Google Popup. Akun dengan hak akses admin otomatis diberikan hak pengelolaan penuh.
+                Masuk aman menggunakan autentikasi Firebase Google Popup. Progres belajar kosakata dan skor kuis tersimpan otomatis di Firestore.
               </p>
 
               <button
@@ -262,7 +270,7 @@ export const LoginView: React.FC = () => {
             </div>
           )}
 
-          {/* Security feature badges */}
+          {/* Features badge */}
           <div className="mt-8 pt-6 border-t border-slate-800 grid grid-cols-2 gap-3 text-[11px] text-slate-400">
             <div className="flex items-center gap-1.5">
               <CheckCircle2 className="w-3.5 h-3.5 text-emerald-400 shrink-0" />
@@ -274,28 +282,12 @@ export const LoginView: React.FC = () => {
             </div>
             <div className="flex items-center gap-1.5">
               <CheckCircle2 className="w-3.5 h-3.5 text-emerald-400 shrink-0" />
-              <span>Gemini 3.8 Flash AI</span>
+              <span>Audio Pelafalan Arab Asli</span>
             </div>
             <div className="flex items-center gap-1.5">
               <CheckCircle2 className="w-3.5 h-3.5 text-emerald-400 shrink-0" />
-              <span>Express Backend API</span>
+              <span>Ustadz AI Gemini 3.8 Flash</span>
             </div>
-          </div>
-        </div>
-
-        {/* Tech stack footer info */}
-        <div className="mt-8 flex flex-wrap items-center justify-center gap-6 text-xs text-slate-500">
-          <div className="flex items-center gap-1.5">
-            <Server className="w-4 h-4 text-indigo-400" />
-            <span>Express /api (Vercel rewrite)</span>
-          </div>
-          <div className="flex items-center gap-1.5">
-            <Database className="w-4 h-4 text-amber-400" />
-            <span>Firestore Security Rules</span>
-          </div>
-          <div className="flex items-center gap-1.5">
-            <Sparkles className="w-4 h-4 text-purple-400" />
-            <span>Server-side Gemini AI Key</span>
           </div>
         </div>
       </div>

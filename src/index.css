@@ -6,6 +6,10 @@
   }
 }
 
+.font-arabic {
+  font-family: 'Amiri', 'Scheherazade New', 'Traditional Arabic', serif;
+}
+
 /* Custom sleek dark scrollbar */
 ::-webkit-scrollbar {
   width: 6px;
